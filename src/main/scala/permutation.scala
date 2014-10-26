@@ -1,6 +1,5 @@
 class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 {
-
 	// specifying a permutation as a map, assume non-specified values are fixed by the permutation
 	def this(m: Map[Int,Int]) {
 		this ( (i:Int) => if (m.isDefinedAt(i)) m(i) else i )
@@ -11,16 +10,19 @@ class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 		this ( Map(a->b, b->a) )
 	}
 
-	private def this (Cycle: List[Int], IsValid: Boolean) {
-		this(Permutation.listToCycleMap(Cycle, Map()))
-	}
 
-	def this (Cycle: List[Int]) {
+	/*def this (Cycle: List[Int]) {
 		// single cycle in cycle notation
 		this(Cycle, if (Permutation.isValidCycle(Cycle)) true else throw new Exception ("Invalid Cycle"))
+	}*/
+
+
+	def this (Cycles: List[List[Int]]) {
+		this(Permutation.listsToCyclesMap(Cycles))
 	}
 
 	private val fibers : Map[Int,List[Int]] = Permutation.allIntegers.groupBy(func)
+
 	private val assertValid: Boolean = {
 		// apply f to all integers. Make sure image lies inside allIntegers, and all fibers are singletons
 		val isValid : Boolean =  fibers.toList.forall(p => Permutation.isValidInteger(p._1) && (p._2.length==1))
@@ -37,19 +39,29 @@ object Permutation {
 	def isValidInteger(i: Int) : Boolean = {i>=1 && i<=MAX_INT}
 	val allIntegers = (1 to MAX_INT).toList
 	val Identity : Permutation = new Permutation((i:Int) =>i)
-	private def isValidCycle(Cycle: List[Int]) : Boolean = {
-		Cycle.distinct.length==Cycle.length // no duplicates
+	private def hasNoDuplicates(l: List[Any]): Boolean = {
+		l.distinct.length == l.length
 	}
-	private def listToCycleMap(l:List[Int], StartingValue: Map[Int,Int]):Map[Int,Int] = {
+
+	private def isValidCycleList(Cycles:List[List[Int]]) : Boolean =
+	{
+		hasNoDuplicates(Cycles.flatten) // no duplicates
+	}
+
+	private def listToCycleMap(StartingValue: Map[Int,Int], l:List[Int]):Map[Int,Int] = {
 		def helper(current:List[Int], acc: Map[Int,Int]):Map[Int,Int] = {
 			current match {
-				case Nil => throw new Exception ("Empty. Did not expect this")
+				case Nil => throw new Exception ("Empty. Did not expect to get here.")
 				case x::Nil => acc // done
 				case x::y::rest => helper(y::rest, acc.updated(x,y))
 			}
 		}
 		// wrap the list by adding the first element to the end
 		helper(l:+l.head, StartingValue)
+	}
+
+	private def listsToCyclesMap(ls: List[List[Int]]) : Map[Int, Int] = {
+		ls.foldLeft[Map[Int,Int]](Map())(listToCycleMap)
 	}
 }
 
