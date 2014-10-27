@@ -25,34 +25,44 @@ class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 		if (isValid) true else (throw new Exception("Invalid Permutation"))
 	}
 
-	def apply(i: Int) : Int = {func(i)}
+	def apply(i: Int) : Int = {if (Permutation.isValidInteger(i)) func(i) else throw new Exception ("Invalid Integer")}
 	def Inverse: Permutation = new Permutation( (i:Int) => fibers(i).head )
 	def * (that: Permutation) : Permutation = new Permutation ( (i:Int) => this(that(i)) )
 
-	def toCycles: List[List[Int]] =
-	{
-		def helper(ValueSet: Set[Int], accCycles:List[List[Int]],  currCycleValues: List[Int]) : (Set[Int], List[List[Int]], List[Int]) =
-		{
-			if (ValueSet.isEmpty)
-				if (currCycleValues.isEmpty) (ValueSet, accCycles, currCycleValues)
-				else throw new Exception ("Something went wrong")
-			else
-			if (currCycleValues.isEmpty) helper(ValueSet.tail, accCycles, List(ValueSet.head))
-			else
-			{
-				val nextValue: Int = this.func(currCycleValues.last)
-				if (nextValue == currCycleValues.head) // reached full cycle. If it's not a 1-cycle, add it to the result & reset current cycle
-					helper(ValueSet - nextValue, if (currCycleValues.length == 1) accCycles else currCycleValues :: accCycles, Nil)
-				else
-					helper(ValueSet - nextValue, accCycles, currCycleValues :+ nextValue)
-			}
+	def getOrbit(Element: Int): List[Int] = {
+		def reverseHelper(currElement: Int, currOrbit: List[Int]) : List[Int] ={
+			val nextElement: Int = this.apply(currElement)
+			if (nextElement == Element) currOrbit else reverseHelper(nextElement, nextElement::currOrbit) // reverse orbit to allow prepend -> only traverse list once
 		}
-
-		val (s,l, c) = helper(Permutation.allIntegers.toSet, Nil, Nil) // simplify this!!
-		l
+		reverseHelper(Element, List(Element)).reverse
 	}
 
+	private def toCycles: List[List[Int]] =
+	{
+		def helper(ValueSet: Set[Int], accCycles:List[List[Int]] ) : (Set[Int], List[List[Int]]) =
+		{
+			if (ValueSet.isEmpty)
+				(ValueSet, accCycles)
+			else
+			{
+				val nextValue: Int = ValueSet.min
+				val nextOrbit: List[Int] = getOrbit(nextValue)
+				val nextValueSet: Set[Int] = ValueSet -- nextOrbit.toSet[Int]
+				helper(nextValueSet, if (nextOrbit.length == 1) accCycles else nextOrbit :: accCycles)
+			}
+		}
+		val (s, cycles) = helper(Permutation.allIntegers.toSet, Nil) // simplify this!!
+		cycles.reverse
+	}
+	lazy val cycles: List[List[Int]] = toCycles
+	lazy private val stringCycles: String = if (cycles.isEmpty) "()" else cycles.map("(" + _.mkString(" ") + ")").mkString("")
+	override def toString = stringCycles
+
+	lazy val signature: Int = {
+		cycles.map( (l : List[Int]) => 2 * (l.length % 2)-1).fold[Int](1)((a,b) => a*b)
+	}
 }
+
 
 object Permutation {
 	val MAX_INT: Int = 20
