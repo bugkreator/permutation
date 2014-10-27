@@ -3,7 +3,7 @@ object sheet1 {
 	def t: List[List[Int]] = List( List(1,5,3,11), List(2,4,6))
 
 	Permutation.Identity.Inverse
-	val p = new Permutation(t)
+	val p = new Permutation(1,20)
 	p.Inverse
 	p.signature
 
