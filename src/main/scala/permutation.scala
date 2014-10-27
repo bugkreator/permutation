@@ -48,7 +48,7 @@ class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 			}
 		}
 
-		val (s,l, c) = helper(Permutation.allIntegers.toSet, Nil, Nil)
+		val (s,l, c) = helper(Permutation.allIntegers.toSet, Nil, Nil) // simplify this!!
 		l
 	}
 
