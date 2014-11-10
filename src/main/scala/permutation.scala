@@ -2,7 +2,8 @@ class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 {
 	// specifying a permutation as a map, assume non-specified values are fixed by the permutation
 	def this(m: Map[Int,Int]) {
-		this ( (i:Int) => if (m.isDefinedAt(i)) m(i) else i )
+		//this ( (i:Int) => if (m.isDefinedAt(i)) m(i) else i )
+		this (m.withDefault(identity[Int])) // Need asInstanceOf[Int=>Int] ??)
 	}
 
 	// transposition (a b)
@@ -51,7 +52,7 @@ class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 				helper(nextValueSet, if (nextOrbit.length == 1) accCycles else nextOrbit :: accCycles)
 			}
 		}
-		val (s, cycles) = helper(Permutation.allIntegers.toSet, Nil) // simplify this!!
+		val (s, cycles) = helper(Permutation.allIntegers.toSet, Nil)
 		cycles.reverse
 	}
 	lazy val cycles: List[List[Int]] = toCycles
@@ -62,7 +63,6 @@ class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 		cycles.map( (l : List[Int]) => 2 * (l.length % 2)-1).fold[Int](1)((a,b) => a*b)
 	}
 }
-
 
 object Permutation {
 	val MAX_INT: Int = 20
