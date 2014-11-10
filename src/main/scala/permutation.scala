@@ -3,7 +3,7 @@ class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 	// specifying a permutation as a map, assume non-specified values are fixed by the permutation
 	def this(m: Map[Int,Int]) {
 		//this ( (i:Int) => if (m.isDefinedAt(i)) m(i) else i )
-		this (m.withDefault(identity[Int])) // Need asInstanceOf[Int=>Int] ??)
+		this (m.withDefault(identity[Int]).asInstanceOf[Int=>Int] ) // Need asInstanceOf[Int=>Int] ??)
 	}
 
 	// transposition (a b)
@@ -29,8 +29,14 @@ class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 	def apply(i: Int) : Int = {if (Permutation.isValidInteger(i)) func(i) else throw new Exception ("Invalid Integer")}
 	def Inverse: Permutation = new Permutation( (i:Int) => fibers(i).head )
 	def * (that: Permutation) : Permutation = new Permutation ( (i:Int) => this(that(i)) )
-
-	def getOrbit(Element: Int): List[Int] = {
+	def ** (n: Int) : Permutation = {
+		def helper(acc: Permutation, exp: Int) : Permutation = {
+			if (exp == 0) acc else helper(this*acc, exp - 1)
+		}
+		if (n<0) (this.Inverse)**(-n)
+		else helper(Permutation.Identity, n)
+	}
+	private def getOrbit(Element: Int): List[Int] = {
 		def reverseHelper(currElement: Int, currOrbit: List[Int]) : List[Int] ={
 			val nextElement: Int = this.apply(currElement)
 			if (nextElement == Element) currOrbit else reverseHelper(nextElement, nextElement::currOrbit) // reverse orbit to allow prepend -> only traverse list once
@@ -52,7 +58,7 @@ class Permutation(val func: (Int => Int))  extends Function1[Int, Int]
 				helper(nextValueSet, if (nextOrbit.length == 1) accCycles else nextOrbit :: accCycles)
 			}
 		}
-		val (s, cycles) = helper(Permutation.allIntegers.toSet, Nil)
+		val (_, cycles) = helper(Permutation.allIntegers.toSet, Nil)
 		cycles.reverse
 	}
 	lazy val cycles: List[List[Int]] = toCycles
@@ -68,7 +74,7 @@ object Permutation {
 	val MAX_INT: Int = 20
 	def isValidInteger(i: Int) : Boolean = {i>=1 && i<=MAX_INT}
 	val allIntegers = (1 to MAX_INT).toList
-	val Identity : Permutation = new Permutation( (i:Int) => i)
+	val Identity : Permutation = new Permutation(Map().asInstanceOf[Map[Int,Int]])
 
 	private def hasNoDuplicates(l: List[Any]): Boolean = {
 		l.distinct.length == l.length

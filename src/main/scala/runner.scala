@@ -3,8 +3,7 @@
  */
 object runner extends App{
 	override def main(args: Array[String]) {
-		val p1: Permutation = new Permutation(1,2)
-		val p2: Permutation = new Permutation(2,3)
-		println(p1*p2)
+		val p1: Permutation = new Permutation(List(List(1,2,3,4), List(5,6)))
+
 	}
 }
